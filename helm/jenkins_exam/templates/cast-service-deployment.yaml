@@ -28,7 +28,7 @@ spec:
           env:
             - name: DATABASE_URI
               value: {{ .Values.castService.databaseUri }}
-          image: image: "{{ .Values.castService.image.repository }}:{{ .Values.castService.image.tag }}"
+          image: "{{ .Values.castService.image.repository }}:{{ .Values.castService.image.tag }}"
           name: cast-service
           ports:
             - containerPort: 8000
