@@ -11,7 +11,7 @@ movieService:
   replicas: 1
   image: "tanguyfremont/movie-service:latest"
   imagePullPolicy: Always
-  castServiceHostUrl: "http://cast-service:8000/api/v1/casts/"
+  castServiceHostUrl: "http://cast-service:8002/api/v1/casts/"
   databaseUri: "postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev"
   persistentVolumeClaimName: "movie-service-claim0"
   storageRequest: "100Mi"
