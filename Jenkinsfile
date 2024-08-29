@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials'
-        HELM_CHART_PATH = './helm/jenkins-exam'
+        HELM_CHART_PATH = './helm/jenkins_exam'
         KUBECONFIG = credentials("config")
         BRANCH_NAME = "${env.GIT_BRANCH?.replaceFirst(/^origin\//, '') ?: 'staging'}"
     }
@@ -67,7 +67,7 @@ pipeline {
                         --namespace ${namespace} \
                         --wait
                         """
-                        
+
                     }
                 }
             }
