@@ -5,7 +5,7 @@ pipeline {
         DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials'
         HELM_CHART_PATH = './helm/jenkins-exam'
         KUBECONFIG = credentials("config")
-        BRANCH_NAME = "${env.BRANCH_NAME ?: 'staging'}" // If no branch_name, (i.e. launched from jenkins ui) then set to staging
+        BRANCH_NAME = "${env.GIT_BRANCH?.replaceFirst(/^origin\//, '') ?: 'staging'}"
     }
 
     stages {
