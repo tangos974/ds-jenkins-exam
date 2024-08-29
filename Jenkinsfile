@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials' //Jenkins credential ID for secret containing dockerhub login + password
+        DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials'
         HELM_CHART_PATH = 'helm/jenkins-exam'
+        KUBECONFIG = credentials("config")
         }
 
     stages {
