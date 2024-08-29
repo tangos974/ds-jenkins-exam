@@ -31,45 +31,44 @@ pipeline {
                 }
             }
         }
-        stage('Deploy to Kubernetes') {
+        stage('Deploy') {
             steps {
                 script {
-                    def namespace = ''
-                    if (env.BRANCH_NAME == 'dev') {
-                        namespace = 'dev'
-                    } else if (env.BRANCH_NAME == 'qa') {
-                        namespace = 'qa'
-                    } else if (env.BRANCH_NAME == 'staging') {
-                        namespace = 'staging'
-                    } else {
-                        error("Unsupported branch for deployment: ${env.BRANCH_NAME}")
-                    }
-                    // Deploy the app to the correct namespace
-                    sh """
-                        helm upgrade --install jenkinsexam ${HELM_CHART_PATH} \
-                        --set movieService.image.tag=${env.BRANCH_NAME} \
-                        --set castService.image.tag=${env.BRANCH_NAME} \
-                        --namespace ${namespace} \
-                        --wait
-                    """
-                }
-            }
-        }
-        stage('Deploy to Production') {
-            when {
-                branch 'master'  // Only allow on master branch
-            }
-            steps {
-                input(message: 'Deploy to production?', ok: 'Deploy')  // Manual approval
-                script {
-                    // Deploy entire application to production
-                    sh """
+                    if (env.BRANCH_NAME == 'master') {
+
+                        // Production deployment
+                        input(message: 'Deploy to production?', ok: 'Deploy') // Manual approval
+                        sh """
                         helm upgrade --install jenkinsexam ${HELM_CHART_PATH} \
                         --set movieService.image.tag=latest \
                         --set castService.image.tag=latest \
                         --namespace prod \
                         --wait
-                    """
+                        """
+
+                    } else {
+
+                        // Non-production deployment
+                        def namespace = ''
+                        if (env.BRANCH_NAME == 'dev') {
+                            namespace = 'dev'
+                        } else if (env.BRANCH_NAME == 'qa') {
+                            namespace = 'qa'
+                        } else if (env.BRANCH_NAME == 'staging') {
+                            namespace = 'staging'
+                        } else {
+                            error("Unsupported branch for deployment: ${env.BRANCH_NAME}")
+                        }
+                        // Deploy the app to the correct namespace
+                        sh """
+                        helm upgrade --install jenkinsexam ${HELM_CHART_PATH} \
+                        --set movieService.image.tag=${env.BRANCH_NAME} \
+                        --set castService.image.tag=${env.BRANCH_NAME} \
+                        --namespace ${namespace} \
+                        --wait
+                        """
+                        
+                    }
                 }
             }
         }
