@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: cast-service
+  name: cast-service
+spec:
+  replicas: {{ .Values.castService.replicas }}
+  selector:
+    matchLabels:
+      io.kompose.service: cast-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: cast-service
+    spec:
+      containers:
+        - args:
+            - uvicorn
+            - app.main:app
+            - --reload
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+          env:
+            - name: DATABASE_URI
+              value: {{ .Values.castService.databaseUri }}
+          image: {{ .Values.castService.image }}
+          name: cast-service
+          ports:
+            - containerPort: 8000
+      restartPolicy: Always

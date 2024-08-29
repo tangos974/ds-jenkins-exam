@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: movie-db
+  name: movie-db
+spec:
+  replicas: {{ .Values.movieDb.replicas }}
+  selector:
+    matchLabels:
+      io.kompose.service: movie-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: movie-db
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: {{ .Values.movieDb.postgresDb }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.movieDb.postgresPassword }}
+            - name: POSTGRES_USER
+              value: {{ .Values.movieDb.postgresUser }}
+          image: {{ .Values.movieDb.image }}
+          name: movie-db
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data/
+              name: postgres-data-movie
+      restartPolicy: Always
+      volumes:
+        - name: postgres-data-movie
+          persistentVolumeClaim:
+            claimName: postgres-data-movie

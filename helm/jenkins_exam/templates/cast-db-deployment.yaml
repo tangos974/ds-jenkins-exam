@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: cast-db
+  name: cast-db
+spec:
+  replicas: {{ .Values.castDb.replicas }}
+  selector:
+    matchLabels:
+      io.kompose.service: cast-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: cast-db
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: {{ .Values.castDb.postgresDb }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.castDb.postgresPassword }}
+            - name: POSTGRES_USER
+              value: {{ .Values.castDb.postgresUser }}
+          image: {{ .Values.castDb.image }}
+          name: cast-db
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data/
+              name: postgres-data-cast
+      restartPolicy: Always
+      volumes:
+        - name: postgres-data-cast
+          persistentVolumeClaim:
+            claimName: postgres-data-cast

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: movie-service
+  name: movie-service
+spec:
+  replicas: {{ .Values.movieService.replicas }}
+  selector:
+    matchLabels:
+      io.kompose.service: movie-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: movie-service
+    spec:
+      containers:
+        - args:
+            - uvicorn
+            - app.main:app
+            - --reload
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+          env:
+            - name: CAST_SERVICE_HOST_URL
+              value: {{ .Values.movieService.castServiceHostUrl }}
+            - name: DATABASE_URI
+              value: {{ .Values.movieService.databaseUri }}
+          image: {{ .Values.movieService.image }}
+          name: movie-service
+          ports:
+            - containerPort: 8000
+      restartPolicy: Always

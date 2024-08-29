@@ -1,0 +1,38 @@
+movieDb:
+  replicas: 1
+  image: "postgres:12.1-alpine"
+  postgresDb: "movie_db_dev"
+  postgresPassword: "movie_db_password"
+  postgresUser: "movie_db_username"
+  persistentVolumeClaimName: "postgres-data-movie"
+  storageRequest: "100Mi"
+
+movieService:
+  replicas: 1
+  image: "tanguyfremont/movie-service:latest"
+  imagePullPolicy: Always
+  castServiceHostUrl: "http://cast-service:8000/api/v1/casts/"
+  databaseUri: "postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev"
+  persistentVolumeClaimName: "movie-service-claim0"
+  storageRequest: "100Mi"
+
+castDb:
+  replicas: 1
+  image: "postgres:12.1-alpine"
+  postgresDb: "cast_db_dev"
+  postgresPassword: "cast_db_password"
+  postgresUser: "cast_db_username"
+  persistentVolumeClaimName: "postgres-data-cast"
+  storageRequest: "100Mi"
+
+castService:
+  replicas: 1
+  image: "tanguyfremont/cast-service:latest"
+  imagePullPolicy: Always
+  databaseUri: "postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev"
+  persistentVolumeClaimName: "cast-service-claim0"
+  storageRequest: "100Mi"
+
+nginx:
+  replicas: 1
+  image: "nginx:latest"
