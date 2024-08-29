@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials'
-        HELM_CHART_PATH = 'helm/jenkins-exam'
+        HELM_CHART_PATH = './helm/jenkins-exam'
         KUBECONFIG = credentials("config")
-        BRANCH_NAME = "${env.BRANCH_NAME ?: 'staging'}"
+        BRANCH_NAME = "${env.BRANCH_NAME ?: 'staging'}" // If no branch_name, (i.e. launched from jenkins ui) then set to staging
     }
 
     stages {
@@ -15,56 +15,25 @@ pipeline {
             }
         }
 
-        stage('Build Movie Service Docker Image') {
-            when {
-                changeset pattern: 'movie-service/**'
-            }
+        stage('Build and Push Docker Images') {
             steps {
                 script {
-                    docker.build("tanguyfremont/movie-service:${env.BRANCH_NAME}", "./movie-service")
-                }
-            }
-        }
+                    def imageTag = (env.BRANCH_NAME == 'master') ? 'latest' : env.BRANCH_NAME // If pushed to master tagged 'latest' else tagged $BRANCH_NAME
 
-        stage('Build Cast Service Docker Image') {
-            when {
-                changeset pattern: 'cast-service/**'
-            }
-            steps {
-                script {
-                    docker.build("tanguyfremont/cast-service:${env.BRANCH_NAME}", "./cast-service")
-                }
-            }
-        }
-
-        stage('Push Movie Service Docker Image') {
-            when {
-                changeset pattern: 'movie-service/**'
-            }
-            steps {
-                script {
-                    docker.withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
-                        docker.image("tanguyfremont/movie-service:${env.BRANCH_NAME}").push()
+                    // Build and push movie-service image
+                    docker.build("tanguyfremont/movie-service:${imageTag}", "./movie-service").withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
+                        it.push()
                     }
-                }
-            }
-        }
-
-        stage('Push Cast Service Docker Image') {
-            when {
-                changeset pattern: 'cast-service/**'
-            }
-            steps {
-                script {
-                    docker.withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
-                        docker.image("tanguyfremont/cast-service:${env.BRANCH_NAME}").push()
+                    // Build and push cast-service image
+                    docker.build("tanguyfremont/cast-service:${imageTag}", "./cast-service").withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
+                        it.push()
                     }
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
+                        steps {
                 script {
                     def namespace = ''
                     if (env.BRANCH_NAME == 'dev') {
@@ -77,23 +46,12 @@ pipeline {
                         error("Unsupported branch for deployment: ${env.BRANCH_NAME}")
                     }
 
-                    // Deploy movie-service
+                    // Deploy the app to the correct namespace
                     sh """
-                        helm upgrade --install movie-service ${HELM_CHART_PATH} \
-                        --set image.tag=${env.BRANCH_NAME} \
+                        helm upgrade --install jenkinsexam ${HELM_CHART_PATH} \
+                        --set movieService.image.tag=${env.BRANCH_NAME} \
+                        --set castService.image.tag=${env.BRANCH_NAME} \
                         --namespace ${namespace} \
-                        --set image.repository=tanguyfremont/movie-service \
-                        --set service.name=movie-service \
-                        --wait
-                    """
-
-                    // Deploy cast-service
-                    sh """
-                        helm upgrade --install cast-service ${HELM_CHART_PATH} \
-                        --set image.tag=${env.BRANCH_NAME} \
-                        --namespace ${namespace} \
-                        --set image.repository=tanguyfremont/cast-service \
-                        --set service.name=cast-service \
                         --wait
                     """
                 }
@@ -107,23 +65,12 @@ pipeline {
             steps {
                 input(message: 'Deploy to production?', ok: 'Deploy')  // Manual approval
                 script {
-                    // Deploy movie-service to production
+                    // Deploy entire application to production
                     sh """
-                        helm upgrade --install movie-service ${HELM_CHART_PATH} \
-                        --set image.tag=latest \
+                        helm upgrade --install jenkinsexam ${HELM_CHART_PATH} \
+                        --set movieService.image.tag=latest \
+                        --set castService.image.tag=latest \
                         --namespace prod \
-                        --set image.repository=tanguyfremont/movie-service \
-                        --set service.name=movie-service \
-                        --wait
-                    """
-
-                    // Deploy cast-service to production
-                    sh """
-                        helm upgrade --install cast-service ${HELM_CHART_PATH} \
-                        --set image.tag=latest \
-                        --namespace prod \
-                        --set image.repository=tanguyfremont/cast-service \
-                        --set service.name=cast-service \
                         --wait
                     """
                 }
