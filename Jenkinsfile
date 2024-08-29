@@ -5,10 +5,8 @@ pipeline {
         DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials'
         HELM_CHART_PATH = 'helm/jenkins-exam'
         KUBECONFIG = credentials("config")
-        // Set BRANCH_NAME to staging if it is not already set
         BRANCH_NAME = "${env.BRANCH_NAME ?: 'staging'}"
     }
-        }
 
     stages {
         stage('Clone Repository') {
@@ -18,6 +16,9 @@ pipeline {
         }
 
         stage('Build Movie Service Docker Image') {
+            when {
+                changeset "movie-service/**/*"
+            }
             steps {
                 script {
                     docker.build("tanguyfremont/movie-service:${env.BRANCH_NAME}", "./movie-service")
@@ -26,6 +27,9 @@ pipeline {
         }
 
         stage('Build Cast Service Docker Image') {
+            when {
+                changeset "cast-service/**/*"
+            }
             steps {
                 script {
                     docker.build("tanguyfremont/cast-service:${env.BRANCH_NAME}", "./cast-service")
@@ -34,6 +38,9 @@ pipeline {
         }
 
         stage('Push Movie Service Docker Image') {
+            when {
+                changeset "movie-service/**/*"
+            }
             steps {
                 script {
                     docker.withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
@@ -44,6 +51,9 @@ pipeline {
         }
 
         stage('Push Cast Service Docker Image') {
+            when {
+                changeset "cast-service/**/*"
+            }
             steps {
                 script {
                     docker.withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
@@ -56,7 +66,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             when {
                 expression {
-                    return env.BRANCH_NAME != 'master' // Deploy to non-prod namespaces only if branch is not master
+                    return env.BRANCH_NAME != 'master' && (currentBuild.changeSets.any { it.paths.any { it.startsWith('cast-service/') || it.startsWith('movie-service/') } })
                 }
             }
             steps {
