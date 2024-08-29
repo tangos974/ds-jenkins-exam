@@ -1,39 +1,38 @@
 pipeline {
     agent any
-
     environment {
         DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials'
         HELM_CHART_PATH = './helm/jenkins-exam'
         KUBECONFIG = credentials("config")
         BRANCH_NAME = "${env.GIT_BRANCH?.replaceFirst(/^origin\//, '') ?: 'staging'}"
     }
-
     stages {
         stage('Clone Repository') {
             steps {
                 git 'https://github.com/tangos974/ds-jenkins-exam'
             }
         }
-
         stage('Build and Push Docker Images') {
             steps {
                 script {
-                    def imageTag = (env.BRANCH_NAME == 'master') ? 'latest' : env.BRANCH_NAME // If pushed to master tagged 'latest' else tagged $BRANCH_NAME
-
+                    def imageTag = (env.BRANCH_NAME == 'master') ? 'latest' : env.BRANCH_NAME
+                    
                     // Build and push movie-service image
-                    docker.build("tanguyfremont/movie-service:${imageTag}", "./movie-service").withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
-                        it.push()
+                    docker.withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
+                        def movieImage = docker.build("tanguyfremont/movie-service:${imageTag}", "./movie-service")
+                        movieImage.push()
                     }
+                    
                     // Build and push cast-service image
-                    docker.build("tanguyfremont/cast-service:${imageTag}", "./cast-service").withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
-                        it.push()
+                    docker.withRegistry('', "${DOCKER_REGISTRY_CREDENTIALS}") {
+                        def castImage = docker.build("tanguyfremont/cast-service:${imageTag}", "./cast-service")
+                        castImage.push()
                     }
                 }
             }
         }
-
         stage('Deploy to Kubernetes') {
-                        steps {
+            steps {
                 script {
                     def namespace = ''
                     if (env.BRANCH_NAME == 'dev') {
@@ -45,7 +44,6 @@ pipeline {
                     } else {
                         error("Unsupported branch for deployment: ${env.BRANCH_NAME}")
                     }
-
                     // Deploy the app to the correct namespace
                     sh """
                         helm upgrade --install jenkinsexam ${HELM_CHART_PATH} \
@@ -57,7 +55,6 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy to Production') {
             when {
                 branch 'master'  // Only allow on master branch
@@ -77,7 +74,6 @@ pipeline {
             }
         }
     }
-
     post {
         success {
             echo 'Pipeline completed successfully.'
