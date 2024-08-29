@@ -5,6 +5,9 @@ pipeline {
         DOCKER_REGISTRY_CREDENTIALS = 'dockerhub-credentials'
         HELM_CHART_PATH = 'helm/jenkins-exam'
         KUBECONFIG = credentials("config")
+        // Set BRANCH_NAME to staging if it is not already set
+        BRANCH_NAME = "${env.BRANCH_NAME ?: 'staging'}"
+    }
         }
 
     stages {
