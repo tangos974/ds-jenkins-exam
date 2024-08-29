@@ -64,9 +64,6 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when {
-                changeset pattern: 'cast-service/**,movie-service/**'
-            }
             steps {
                 script {
                     def namespace = ''
