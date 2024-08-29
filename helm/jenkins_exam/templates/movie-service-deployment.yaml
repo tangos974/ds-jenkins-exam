@@ -30,7 +30,7 @@ spec:
               value: {{ .Values.movieService.castServiceHostUrl }}
             - name: DATABASE_URI
               value: {{ .Values.movieService.databaseUri }}
-          image: {{ .Values.movieService.image }}
+          image: "{{ .Values.movieService.image.repository }}:{{ .Values.movieService.image.tag }}"
           name: movie-service
           ports:
             - containerPort: 8000

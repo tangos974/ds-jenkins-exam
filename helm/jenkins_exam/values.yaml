@@ -9,8 +9,9 @@ movieDb:
 
 movieService:
   replicas: 1
-  image: "tanguyfremont/movie-service"
-  tag: "latest"
+  image:
+    repository: "tanguyfremont/movie-service"
+    tag: "latest"
   imagePullPolicy: Always
   castServiceHostUrl: "http://cast-service:8002/api/v1/casts/"
   databaseUri: "postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev"
@@ -28,8 +29,9 @@ castDb:
 
 castService:
   replicas: 1
-  image: "tanguyfremont/cast-service"
-  tag: "latest"
+  image:
+    repository: "tanguyfremont/cast-service"
+    tag: "latest"
   imagePullPolicy: Always
   databaseUri: "postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev"
   persistentVolumeClaimName: "cast-service-claim0"
