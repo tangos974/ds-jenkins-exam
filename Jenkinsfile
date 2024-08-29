@@ -17,7 +17,7 @@ pipeline {
 
         stage('Build Movie Service Docker Image') {
             when {
-                changeset glob: 'movie-service/**'
+                changeset pattern: 'movie-service/**'
             }
             steps {
                 script {
@@ -28,7 +28,7 @@ pipeline {
 
         stage('Build Cast Service Docker Image') {
             when {
-                changeset glob: 'cast-service/**'
+                changeset pattern: 'cast-service/**'
             }
             steps {
                 script {
@@ -39,7 +39,7 @@ pipeline {
 
         stage('Push Movie Service Docker Image') {
             when {
-                changeset glob: 'movie-service/**'
+                changeset pattern: 'movie-service/**'
             }
             steps {
                 script {
@@ -52,7 +52,7 @@ pipeline {
 
         stage('Push Cast Service Docker Image') {
             when {
-                changeset glob: 'cast-service/**'
+                changeset pattern: 'cast-service/**'
             }
             steps {
                 script {
@@ -65,7 +65,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when {
-                changeset glob: 'cast-service/**,movie-service/**'
+                changeset pattern: 'cast-service/**,movie-service/**'
             }
             steps {
                 script {
