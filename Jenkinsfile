@@ -17,7 +17,7 @@ pipeline {
 
         stage('Build Movie Service Docker Image') {
             when {
-                changeset "movie-service/**/*"
+                changeset glob: 'movie-service/**'
             }
             steps {
                 script {
@@ -28,7 +28,7 @@ pipeline {
 
         stage('Build Cast Service Docker Image') {
             when {
-                changeset "cast-service/**/*"
+                changeset glob: 'cast-service/**'
             }
             steps {
                 script {
@@ -39,7 +39,7 @@ pipeline {
 
         stage('Push Movie Service Docker Image') {
             when {
-                changeset "movie-service/**/*"
+                changeset glob: 'movie-service/**'
             }
             steps {
                 script {
@@ -52,7 +52,7 @@ pipeline {
 
         stage('Push Cast Service Docker Image') {
             when {
-                changeset "cast-service/**/*"
+                changeset glob: 'cast-service/**'
             }
             steps {
                 script {
@@ -65,9 +65,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             when {
-                expression {
-                    return env.BRANCH_NAME != 'master' && (currentBuild.changeSets.any { it.paths.any { it.startsWith('cast-service/') || it.startsWith('movie-service/') } })
-                }
+                changeset glob: 'cast-service/**,movie-service/**'
             }
             steps {
                 script {
