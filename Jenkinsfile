@@ -40,8 +40,6 @@ pipeline {
                         input(message: 'Deploy to production?', ok: 'Deploy') // Manual approval
                         sh """
                         helm upgrade --install jenkinsexam ${HELM_CHART_PATH} \
-                        --set movieService.image.tag=latest \
-                        --set castService.image.tag=latest \
                         --namespace prod \
                         --wait
                         """
